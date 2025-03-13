@@ -9,7 +9,7 @@ function Product() {
   const [isLoading, setisLoading] = useState(false);
 
   useEffect(() => {
-    setisLoading(true)
+    setisLoading(true);
     axios
       .get("https://fakestoreapi.com/products")
       .then((res) => {
@@ -19,22 +19,25 @@ function Product() {
       .catch((err) => {
         console.log(err);
         setisLoading(false);
-      })
-  }, [])
+      });
+  }, []);
 
   return (
     <>
-      {isLoading?(
-      <Loader />) : (
-      <section className={classes.Products_container}>
-        {Products?.map((singleProduct) => {
-          return <ProductCard 
-          product={singleProduct} 
-          key={singleProduct.id} 
-          renderAdd={true}
-          />;
-        })}
-      </section>
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <section className={classes.Products_container}>
+          {Products?.map((singleProduct) => {
+            return (
+              <ProductCard
+                product={singleProduct}
+                key={singleProduct.id}
+                renderAdd={true}
+              />
+            );
+          })}
+        </section>
       )}
     </>
   );

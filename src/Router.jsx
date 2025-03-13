@@ -6,13 +6,13 @@ import Payment from "./Pages/Payment/Payment";
 import Orders from "./Pages/Orders/Orders";
 import Cart from "./Pages/Cart/Cart";
 import Results from "./Pages/Results/Results";
-import ProductDetail from "./Pages/ProductDetail/ProductDetail"
+import ProductDetail from "./Pages/ProductDetail/ProductDetail";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import ProtectedRoute from "./Components/ProtectedRoute/ProtectedRoute";
 
 const stripePromise = loadStripe(
-  "pk_test_51QyDx3RoMjBhgIWUEJcOmdrweBPfMcjvczpCzjzXMQY9cvw1Pq78yElbrLeo8pnfQCWJNZMtyWwqua6CPtNknCHp00x8z704IV"
+  "pk_test_51R1UVVGwj2Pj8cht0WtPiZSGCZwfk277F0AYd662qZKZv1gFNO5ziAT1hTv2T60fN5lodZWy1L3c0JIxTU4klgTv00igsIFlTT"
 );
 
 function Routing() {
@@ -49,9 +49,6 @@ function Routing() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/category/:categoryName" element={<Results />} />
         <Route path="/products/:productId" element={<ProductDetail />} />
-        
-
-       
       </Routes>
     </Router>
   );

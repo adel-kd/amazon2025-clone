@@ -2,14 +2,15 @@ import React, { useContext, useState } from "react";
 import classes from "./Payment.module.css";
 import LayOut from "../../Components/LayOut/LayOut";
 import { DataContext } from "../../Components/DataProvider/DataProvider";
-import ProductCard from "../../Components/Product/ProductCard"
-import {useStripe,useElements,CardElement} from "@stripe/react-stripe-js";
-import CurrencyFormat from "../../Components/CurrencyFormat/CurrencyFormat"
+import ProductCard from "../../Components/Product/ProductCard";
+import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
+import CurrencyFormat from "../../Components/CurrencyFormat/CurrencyFormat";
 import { axiosInstance } from "../../Api/axios";
 import { db } from "../../Utility/firebase";
 import { useNavigate } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
 import { Type } from "../../Utility/action.type";
+import { collection, doc, setDoc } from "firebase/firestore";
 
 function Payment() {
   const [{ user, basket }, dispatch] = useContext(DataContext);
@@ -17,71 +18,71 @@ function Payment() {
 
   const totalItem = basket?.reduce((amount, item) => {
     return item.amount + amount;
-  }, 0); 
+  }, 0);
 
   const total = basket.reduce((amount, item) => {
     return item.price * item.amount + amount;
   }, 0);
 
+  const [cardError, setCardError] = useState(null);
+  const [processing, setProcessing] = useState(false);
 
-    const [cardError, setCardError] = useState(null);
-    const [processing, setProcessing] = useState(false);
-
-    const stripe = useStripe();
-    const elements = useElements();
-    const navigate = useNavigate();
-
+  const stripe = useStripe();
+  const elements = useElements();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     // console.log(e);
     e?.error?.message ? setCardError(e?.error?.message) : setCardError("");
-  }; 
+  };
 
-   const handlePayment = async (e) => {
-     e.preventDefault();
+  const handlePayment = async (e) => {
+    e.preventDefault();
 
-     try {
-       setProcessing(true);
-       // 1. backend || functions ---> contact to the client secret
-       const response = await axiosInstance({
-         method: "POST",
-         url: `/payment/create?total=${total * 100}`, 
-       });
+    try {
+      setProcessing(true);
+      // 1. backend || functions ---> contact to the client secret
+      const response = await axiosInstance({
+        method: "POST",
+        url: `/payment/create?total=${total * 100}`,
+      });
 
       //  console.log(response.data);
-       const clientSecret = response.data?.clientSecret;
-       // 2. client side (react side confirmation)
-       const { paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-         payment_method: {
-           card: elements.getElement(CardElement),
-         },
-       });
+      const clientSecret = response.data?.clientSecret;
+      // 2. client side (react side confirmation)
+      const { paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: elements.getElement(CardElement),
+        },
+      });
 
-       console.log(paymentIntent);
+      console.log(paymentIntent);
 
-       // 3. after the confirmation --> order > firestore database save (make sure firstore db is enabeled in firebase project), clear basket
-       await db
-         .collection("users")
-         .doc(user.uid)
-         .collection("orders")
-         .doc(paymentIntent.id)
-         .set({
-           basket: basket,
-           amount: paymentIntent.amount,
-           created: paymentIntent.created,
-         });
+      // 3. after the confirmation --> order > firestore database save (make sure firstore db is enabeled in firebase project), clear basket
+      try {
+        await setDoc(
+          doc(collection(db, "users", user.uid, "orders"), paymentIntent.id),
+          {
+            basket,
+            amount: paymentIntent.amount,
+            created: paymentIntent.created,
+          }
+        );
+        console.log("Order successfully written to Firestore!");
+      } catch (error) {
+        console.error("Error writing order to Firestore:", error.message);
+      }
 
-       // empty the basket
-       dispatch({ type: Type.EMPTY_BASKET });
+      // empty the basket
+      dispatch({ type: Type.EMPTY_BASKET });
 
-       setProcessing(false);
-       navigate("/orders", { state: { msg: "you have placed new Order" } });
-     } catch (error) {
-       // console.log(error);
-       setProcessing(false);
-     }
-   };
-
+      setProcessing(false);
+      navigate("/orders", { state: { msg: "you have placed new Order" } });
+    } catch (error) {
+      // console.log(error);
+      setProcessing(false);
+    }
+  };
 
   return (
     <LayOut>
