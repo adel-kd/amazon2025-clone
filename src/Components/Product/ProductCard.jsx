@@ -32,13 +32,13 @@ function ProductCard({ product, flex, renderDesc, renderAdd }) {
       }`}
     >
       <Link to={`/products/${id}`}>
-        <img src={image} alt="" className={classes.img_container} />
+        <img src={image} alt={title} className={classes.img_container} />
       </Link>
       <div>
-        <h3>{title}</h3>
+        <h3>{title?.length > 50 ? `${title.substring(0, 50)}...` : title}</h3>
         {renderDesc && <div style={{ maxWidth: "750px" }}>{description}</div>}
         <div className={classes.rating}>
-          <Rating value={rating?.rate} precision={0.1} />
+          <Rating value={rating?.rate || 0} precision={0.1} readOnly />
           <small>{rating?.count}</small>
         </div>
         <div>

@@ -61,12 +61,21 @@
   width: 100%;
   margin-right: -2px;
 }
-.search svg {
+.search button {
+  border: none;
+  background: #febd69;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.search button svg {
   padding: 7px;
   background: #febd69;
   color: #1a1a1a;
 }
-.search svg:hover {
+.search button:hover,
+.search button svg:hover {
   background-color: #d49644;
 }
 .search:focus-within {

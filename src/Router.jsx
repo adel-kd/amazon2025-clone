@@ -6,6 +6,7 @@ import Payment from "./Pages/Payment/Payment";
 import Orders from "./Pages/Orders/Orders";
 import Cart from "./Pages/Cart/Cart";
 import Results from "./Pages/Results/Results";
+import Search from "./Pages/Search/Search";
 import ProductDetail from "./Pages/ProductDetail/ProductDetail";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
@@ -21,6 +22,7 @@ function Routing() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/search" element={<Search />} />
         <Route
           path="/payments"
           element={

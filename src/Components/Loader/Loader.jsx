@@ -1,17 +1,9 @@
 import React from 'react'
-import {FadeLoader} from 'react-spinners'
+import LoadingSpinner from '../LoadingSpinner/LoadingSpinner'
+
 function Loader() {
   return (
-    <div
-    style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "50vh",
-    }}
-    >
-      <FadeLoader />
-    </div>
+    <LoadingSpinner />
   );
 }
 

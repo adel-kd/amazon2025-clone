@@ -6,15 +6,13 @@ import ProductCard from "../../Components/Product/ProductCard";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 import CurrencyFormat from "../../Components/CurrencyFormat/CurrencyFormat";
 import { axiosInstance } from "../../Api/axios";
-import { db } from "../../Utility/firebase";
 import { useNavigate } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
 import { Type } from "../../Utility/action.type";
-import { collection, doc, setDoc } from "firebase/firestore";
+import { db } from "../../Utility/firebase";
 
 function Payment() {
   const [{ user, basket }, dispatch] = useContext(DataContext);
-  console.log(user);
 
   const totalItem = basket?.reduce((amount, item) => {
     return item.amount + amount;
@@ -32,23 +30,37 @@ function Payment() {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    // console.log(e);
     e?.error?.message ? setCardError(e?.error?.message) : setCardError("");
   };
 
   const handlePayment = async (e) => {
     e.preventDefault();
 
+    if (!stripe || !elements) {
+      setCardError("Stripe has not loaded yet. Please try again.");
+      return;
+    }
+
+    if (basket.length === 0) {
+      setCardError("Your cart is empty");
+      return;
+    }
     try {
       setProcessing(true);
+      setCardError(null);
+      
       // 1. backend || functions ---> contact to the client secret
       const response = await axiosInstance({
         method: "POST",
         url: `/payment/create?total=${total * 100}`,
       });
 
-      //  console.log(response.data);
       const clientSecret = response.data?.clientSecret;
+      
+      if (!clientSecret) {
+        throw new Error("Failed to create payment intent");
+      }
+      
       // 2. client side (react side confirmation)
       const { paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
@@ -56,21 +68,25 @@ function Payment() {
         },
       });
 
-      console.log(paymentIntent);
 
+      if (!paymentIntent) {
+        throw new Error("Payment failed");
+      }
       // 3. after the confirmation --> order > firestore database save (make sure firstore db is enabeled in firebase project), clear basket
       try {
-        await setDoc(
-          doc(collection(db, "users", user.uid, "orders"), paymentIntent.id),
-          {
+        await db
+          .collection("users")
+          .doc(user.uid)
+          .collection("orders")
+          .doc(paymentIntent.id)
+          .set({
             basket,
             amount: paymentIntent.amount,
             created: paymentIntent.created,
-          }
-        );
-        console.log("Order successfully written to Firestore!");
+          });
       } catch (error) {
         console.error("Error writing order to Firestore:", error.message);
+        throw new Error("Failed to save order");
       }
 
       // empty the basket
@@ -79,7 +95,8 @@ function Payment() {
       setProcessing(false);
       navigate("/orders", { state: { msg: "you have placed new Order" } });
     } catch (error) {
-      // console.log(error);
+      console.error("Payment error:", error);
+      setCardError(error.message || "An error occurred during payment");
       setProcessing(false);
     }
   };
